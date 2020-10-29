@@ -4,13 +4,13 @@ import subprocess
 import shutil
 import csv
 import argparse
-import importlib
+from importlib import import_module
 
 
 def extract_conn_from_module(module):
-    for name in dir(module):
-        if "cursor" in module[name]:
-            return module[name]
+    for x in module.__dict__.values():
+        if hasattr(x, "cursor"):
+            return x
 
 def write_csv(fname, conn, table):
     cursor = conn.cursor()
@@ -30,6 +30,19 @@ def get_connection(args):
     else:
         raise (RuntimeError, "No connection source supplied")
 
+def filter_changed_rows(refstream, editstream):
+    #Check the header row
+    try:
+        rhead = next(refstream)
+        ehead = next(editstream)
+    except StopIteration:
+        raise (RuntimeError, "Nothing found in CSV file")
+    if not rhead == ehead:
+        raise (RuntimeError, "Header row should not be edited")
+    for ref, ed in zip(csv.reader(refstream), csv.reader(editstream)):
+        if not ref == ed:
+            yield (ref, ed)
+
 def arguments():
     args = argparse.ArgumentParser(description="Edit the contents of a database table using the VIM editor")
     args.add_argument("table", help="The table to edit")
@@ -39,12 +52,22 @@ def arguments():
 def main():
     args = arguments().parse_args()
 
-    tfile = tempfile.NamedTempFile()
     conn = get_connection(args)
     #FIXME: check table exists
     #FIXME: check table has pkey
-    write_csv(tfile.name, conn, args.table)
-    call_vim(tfile.name)
+    editfile = tempfile.NamedTemporaryFile()
+    with open(editfile.name, "w", newline='') as cfile: 
+        write_csv(cfile, conn, args.table)
+    reffile = tempfile.NamedTemporaryFile()
+    shutil.copy(editfile.name, reffile.name)
+
+    call_vim(editfile.name)
+
+    with open(editfile.name, "r", newline="") as eh, \
+        open(reffile.name, "r", newline="") as rh:
+        res = filter_changed_rows(rh, eh)
+        print(list(res))
+
 
 
 if __name__ == "__main__":
