@@ -70,9 +70,9 @@ def make_update_sql(table, headers):
     wclause = []
     for col in headers:
         vclause.append(", ")
-        vclause.append("{} = ?".format(col))
+        vclause.append("{} = %s".format(col))
         wclause.append(" and ")
-        wclause.append("{} = ?".format(col))
+        wclause.append("{} = %s".format(col))
     vclause = "".join(vclause[1:])
     wclause = "".join(wclause[1:])
     return "update {} set {} where {}".format(table, vclause, wclause)
@@ -84,8 +84,7 @@ def do_updates(table, headers, reference, edited, conn):
 
     try:
         cur = conn.cursor()
-        print (query, list(data))
-        #cur.executemany(query, data)
+        cur.executemany(query, data)
         #FIXME: should happen further up?
         conn.commit()
         print (cur.rowcount, "Rows updated")
@@ -98,7 +97,7 @@ def make_delete_sql(table, headers):
     wclause = []
     for col in headers:
         wclause.append(" and ")
-        wclause.append("{} = ?".format(col))
+        wclause.append("{} = %s".format(col))
     wclause = "".join(wclause[1:])
     return "delete from {} where {}".format(table, wclause)
 
@@ -107,8 +106,7 @@ def do_deletes(table, headers, deletes, conn):
 
     try:
         cur = conn.cursor()
-        print (query, list(deletes))
-        #cur.executemany(query, deletes)
+        cur.executemany(query, deletes)
         #FIXME: should happen further up?
         conn.commit()
         print (cur.rowcount, "Rows deleted")
@@ -126,8 +124,10 @@ def process_changes(reffile, editfile, conn, table, headers):
         if len(extras):
             raise (RuntimeError, "Extra lines found: Insertion not currently supported")
     #FIXME: Ask before running, with report.
-    do_updates(table, headers, res['reference'], res['edit'], conn)
-    do_deletes(table, headers, res['delete'], conn)
+    if len(res['reference']):
+        do_updates(table, headers, res['reference'], res['edit'], conn)
+    if len(res['delete']):
+        do_deletes(table, headers, res['delete'], conn)
 
 def arguments():
     args = argparse.ArgumentParser(description="Edit the contents of a database table using the VIM editor")
