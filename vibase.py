@@ -6,6 +6,8 @@ import csv
 import argparse
 from importlib import import_module
 
+from util import query_yes_no, query_options
+
 
 def extract_conn_from_module(module):
     for x in module.__dict__.values():
@@ -123,11 +125,22 @@ def process_changes(reffile, editfile, conn, table, headers):
         extras = get_extra_lines(rh, eh)
         if len(extras):
             raise (RuntimeError, "Extra lines found: Insertion not currently supported")
-    #FIXME: Ask before running, with report.
-    if len(res['reference']):
-        do_updates(table, headers, res['reference'], res['edit'], conn)
-    if len(res['delete']):
-        do_deletes(table, headers, res['delete'], conn)
+    upd_count = len(res['reference'])
+    del_count = len(res['delete'])
+    if upd_count:
+        print("{} record(s) to update".format(upd_count))
+    if del_count:
+        print("{} record(s) to delete".format(del_count))
+    if upd_count or del_count:
+        if query_yes_no("Proceed?") == "yes":
+            if upd_count:
+                do_updates(table, headers, res['reference'], res['edit'], conn)
+            if del_count:
+                do_deletes(table, headers, res['delete'], conn)
+        else:
+            print ("Changes discarded")
+    else:
+        print ("No changes found")
 
 def arguments():
     args = argparse.ArgumentParser(description="Edit the contents of a database table using the VIM editor")
@@ -140,19 +153,31 @@ def main():
 
     conn = get_connection(args)
     #FIXME: check table exists
-    #FIXME: check table has pkey
     headers = None
     editfile = tempfile.NamedTemporaryFile()
     with open(editfile.name, "w", newline='') as cfile: 
         headers = write_csv(cfile, conn, args.table)
     reffile = tempfile.NamedTemporaryFile()
     shutil.copy(editfile.name, reffile.name)
-
-    call_vim(editfile.name)
-
-    process_changes(reffile, editfile, conn, args.table, headers)
     
-
+    call_vim(editfile.name)
+    while True:
+        try:
+            process_changes(reffile, editfile, conn, args.table, headers)
+            break
+        except Exception as err:
+            print ("Failed to save changes: ", err)
+            q = "(C)ancel, (r)etry save, (e)dit the file again?"
+            cmd = query_options(q, ("c", "r", "e"))
+            if cmd == 'c':
+                print ("Changes cancelled")
+                break
+            elif cmd == 'r':
+                continue
+            elif cmd == 'e':
+                call_vim(editfile.name)
+            else:
+                raise ValueError("Not a command")
 
 
 if __name__ == "__main__":
