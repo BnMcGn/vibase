@@ -1,4 +1,6 @@
 
+import sys
+import os
 import tempfile
 import subprocess
 import shutil
@@ -151,6 +153,7 @@ def arguments():
 def main():
     args = arguments().parse_args()
 
+    sys.path.insert(0, os.getcwd())
     conn = get_connection(args)
     #FIXME: check table exists
     headers = None
