@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+#from distutils.core import setup
+from setuptools import setup
 
 import sys
 if not sys.version_info[0] >= 3:
@@ -15,7 +16,7 @@ setup(name='vibase',
       packages=['src'],
       entry_points = {
               'console_scripts': [
-                  'vibase = src:main',
+                  'vibase = src.vibase:main',
               ],
           },
      )

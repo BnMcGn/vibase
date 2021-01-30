@@ -8,7 +8,7 @@ import csv
 import argparse
 from importlib import import_module
 
-from util import query_yes_no, query_options
+from src.util import query_yes_no, query_options
 
 
 def extract_conn_from_module(module):
