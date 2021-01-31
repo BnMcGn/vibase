@@ -32,7 +32,12 @@ def call_vim(target, vim=None):
 
 def get_connection(args):
     if "module" in args:
-        return extract_conn_from_module(import_module(args.module))
+        module = args.module
+        if module.endswith(".py"):
+            module = module[:-3]
+        elif module.endswith(".pyc"):
+            module = module[:-4]
+        return extract_conn_from_module(import_module(module))
     else:
         raise (RuntimeError, "No connection source supplied")
 
