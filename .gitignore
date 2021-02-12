@@ -1,1 +1,6 @@
 src/__pycache__/*
+__pycache__
+build
+dist
+NOTES
+vibase.egg-info

@@ -12,6 +12,7 @@ setup(name='vibase',
       author='Ben McGunigle',
       author_email='bnmcgn@gmail.com',
       url='https://github.com/BnMcGn/vibase',
+      download_url='https://github.com/BnMcGn/vibase/archive/0.0.1.zip',
       packages=['src'],
       entry_points = {
               'console_scripts': [
