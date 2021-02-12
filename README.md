@@ -28,6 +28,16 @@ To connect to a postgresql database named cookiejar, you might create a file cja
 You may then edit the ingredients table:
 
     > vibase --module cjar ingredients
+    
+If you don't wish to store your totally unguessable password in the python file, use the getpass module:
+
+    from psycopg2 import connect
+    from getpass import getpass
+
+    conn = connect(host="localhost", \
+                   database="cookiejar", \
+                   user="me",
+                   password=getpass())
 
 # Author
 
