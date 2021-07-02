@@ -14,6 +14,7 @@ def extract_conn_from_module(module):
     for x in module.__dict__.values():
         if hasattr(x, "cursor"):
             return x
+    raise (RuntimeError, "Couldn't find connection")
 
 def write_csv(fname, conn, table):
     cursor = conn.cursor()
@@ -38,9 +39,22 @@ def get_connection(args):
             module = module[:-3]
         elif module.endswith(".pyc"):
             module = module[:-4]
-        return extract_conn_from_module(import_module(module))
+        conn = extract_conn_from_module(import_module(module))
+        configure_for_connection(conn)
+        return conn
     else:
         raise (RuntimeError, "No connection source supplied")
+
+param_char = "?"
+def sql_param_char():
+    return param_char
+
+def configure_for_connection(conn):
+    global param_char
+    "Attempt to detect type of DB, and set up some options accordingly"
+    #FIXME: Better detection method?
+    if "psycopg2" in repr(type(conn)):
+        param_char = "%s"
 
 def filter_changed_rows(refstream, editstream):
     #Check the header row
@@ -74,9 +88,6 @@ def decide_action(rows):
         else:
             dels.append(ref)
     return {'reference': refs, 'edit': edits, 'delete': dels}
-
-def sql_param_char():
-    return "?"
 
 def make_update_sql(table, headers, old_data, upd_data):
     vclause = []
