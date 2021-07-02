@@ -22,7 +22,7 @@ To connect to a postgresql database named cookiejar, you might create a file cja
 
     conn = connect(host="localhost", \
                    database="cookiejar", \
-                   user="me",
+                   user="me", \
                    password="totally_unguessable")
 
 You may then edit the ingredients table:
@@ -36,7 +36,7 @@ If you don't wish to store your totally unguessable password in the python file,
 
     conn = connect(host="localhost", \
                    database="cookiejar", \
-                   user="me",
+                   user="me", \
                    password=getpass())
 
 # Author

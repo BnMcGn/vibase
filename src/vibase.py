@@ -10,7 +10,6 @@ from importlib import import_module
 
 from src.util import query_yes_no, query_options
 
-
 def extract_conn_from_module(module):
     for x in module.__dict__.values():
         if hasattr(x, "cursor"):
@@ -22,7 +21,9 @@ def write_csv(fname, conn, table):
     writ = csv.writer(fname)
     headers = [i[0] for i in cursor.description]
     writ.writerow(headers)
-    writ.writerows(cursor)
+    for row in cursor:
+        writ.writerow([x if x else "NULL" for x in row])
+    #writ.writerows(cursor)
     return headers
 
 def call_vim(target, vim=None):
@@ -74,27 +75,40 @@ def decide_action(rows):
             dels.append(ref)
     return {'reference': refs, 'edit': edits, 'delete': dels}
 
-def make_update_sql(table, headers):
+def sql_param_char():
+    return "?"
+
+def make_update_sql(table, headers, old_data, upd_data):
     vclause = []
     wclause = []
-    for col in headers:
+    old = []
+    upd = []
+    for col, odat, udat in zip(headers, old_data, upd_data):
+        odat = null_to_none(odat)
+        udat = null_to_none(udat)
         vclause.append(", ")
-        vclause.append("{} = %s".format(col))
+        vclause.append("{} = {}".format(col, sql_param_char()))
         wclause.append(" and ")
-        wclause.append("{} = %s".format(col))
+        if odat:
+            wclause.append("{} = {}".format(col, sql_param_char()))
+            old.append(odat)
+        else:
+            wclause.append("{} is null".format(col))
+        upd.append(udat)
     vclause = "".join(vclause[1:])
     wclause = "".join(wclause[1:])
-    return "update {} set {} where {}".format(table, vclause, wclause)
+    query = "update {} set {} where {}".format(table, vclause, wclause)
+    return query, upd + old
+
+def null_to_none(item):
+    return None if item == "NULL" else item
     
 def do_updates(table, headers, reference, edited, conn):
-    query = make_update_sql(table, headers)
-
-    data = (e + r for r, e in zip(reference, edited))
-
     try:
         cur = conn.cursor()
-        cur.executemany(query, data)
-        #FIXME: should happen further up?
+        for r, e in zip(reference, edited):
+            query, params = make_update_sql(table, headers, r, e)
+            cur.execute(query, params)
         conn.commit()
         print (cur.rowcount, "Rows updated")
     except Exception as error:
@@ -102,21 +116,27 @@ def do_updates(table, headers, reference, edited, conn):
     finally:
         cur.close()
 
-def make_delete_sql(table, headers):
+def make_delete_sql(table, headers, data):
     wclause = []
-    for col in headers:
+    out = []
+    for col, dat in zip(headers, data):
+        dat = null_to_none(dat)
         wclause.append(" and ")
-        wclause.append("{} = %s".format(col))
+        if dat:
+            wclause.append("{} = {}".format(col, sql_param_char()))
+            out.append(dat)
+        else:
+            wclause.append("{} is null".format(col))
     wclause = "".join(wclause[1:])
-    return "delete from {} where {}".format(table, wclause)
+    sql = "delete from {} where {}".format(table, wclause)
+    return sql, out
 
 def do_deletes(table, headers, deletes, conn):
-    query = make_delete_sql(table, headers)
-
     try:
         cur = conn.cursor()
-        cur.executemany(query, deletes)
-        #FIXME: should happen further up?
+        for dl in deletes:
+            query, params = make_delete_sql(table, headers, dl)
+            cur.execute(query, params)
         conn.commit()
         print (cur.rowcount, "Rows deleted")
     except Exception as error:
