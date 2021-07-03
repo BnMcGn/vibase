@@ -10,6 +10,14 @@ Call vibase from the command line, and it will load the specified table into a t
 
 WARNING: This version of vibase is in early development. It is young. It's hungry. IT WANTS TO EAT YOUR DATA!!! Just so you know...
 
+# Installation
+
+    > pip install vibase
+
+Or perhaps:
+
+    > pip3 install vibase
+
 # Usage
 
     > vibase --module [module] [table] 
