@@ -7,7 +7,7 @@ if not sys.version_info[0] >= 3:
     sys.exit("Requires python 3 or greater")
 
 setup(name='vibase',
-      version='0.0.1',
+      version='0.0.2',
       description='Edit a database table using the VIM editor',
       author='Ben McGunigle',
       author_email='bnmcgn@gmail.com',

@@ -23,7 +23,7 @@ def write_csv(fname, conn, table):
     headers = [i[0] for i in cursor.description]
     writ.writerow(headers)
     for row in cursor:
-        writ.writerow([x if x else "NULL" for x in row])
+        writ.writerow(["NULL" if x == None else x for x in row])
     #writ.writerows(cursor)
     return headers
 
