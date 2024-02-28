@@ -5,13 +5,20 @@ import tempfile
 import subprocess
 import shutil
 import csv
+import sqlite3
 import argparse
 from importlib import import_module
 
 from src.util import query_yes_no, query_options
 
+def is_file_sqlite(fname):
+    idstring = "SQLite format 3"
+    with open(fname, 'r', errors='ignore') as fh:
+        line = fh.readline()
+        return line.startswith(idstring)
+
 def extract_conn_from_module(module):
-    for x in module.__dict__.values():
+    for x in module.__dict__.values()
         if hasattr(x, "cursor"):
             return x
     raise (RuntimeError, "Couldn't find connection")
@@ -33,15 +40,18 @@ def call_vim(target, vim=None):
     subprocess.run([vim, target])
 
 def get_connection(args):
-    if "module" in args:
-        module = args.module
-        if module.endswith(".py"):
-            module = module[:-3]
-        elif module.endswith(".pyc"):
-            module = module[:-4]
-        conn = extract_conn_from_module(import_module(module))
-        configure_for_connection(conn)
-        return conn
+    if "connection" in args and os.path.exists(args.connection):
+        if is_file_sqlite(args.connection):
+            return sqlite3.connect(args.connection)
+        else:
+            module = args.connection
+            if module.endswith(".py"):
+                module = module[:-3]
+            elif module.endswith(".pyc"):
+                module = module[:-4]
+            conn = extract_conn_from_module(import_module(module))
+            configure_for_connection(conn)
+            return conn
     else:
         raise (RuntimeError, "No connection source supplied")
 
@@ -182,8 +192,8 @@ def process_changes(reffile, editfile, conn, table, headers):
 
 def arguments():
     args = argparse.ArgumentParser(description="Edit the contents of a database table using the VIM editor")
+    args.add_argument("connection", help="Supply a database. This can be a sqlite database file, or it can be a python module containing a connection object.")
     args.add_argument("table", help="The table to edit")
-    args.add_argument("-m", "--module", help="Supply a python module containing a connection object")
     return args
 
 def main():

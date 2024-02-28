@@ -20,9 +20,17 @@ Or perhaps:
 
 # Usage
 
-    > vibase --module [module] [table] 
+## SQLite
 
-At this time vibase only supports loading database connections through a python module. The first DBI connection found in the top level of the supplied module will be used. The module should be loadable by python 3.
+    > vibase [sqlite file] [table]
+
+Vibase can directly load a SQLite database file.
+
+## All others
+
+    > vibase [module] [table]
+
+Vibase supports loading database connections through a python module. The first DBI connection found in the top level of the supplied module will be used. The module should be loadable by python 3.
 
 To connect to a postgresql database named cookiejar, you might create a file cjar.py:
 
@@ -35,7 +43,7 @@ To connect to a postgresql database named cookiejar, you might create a file cja
 
 You may then edit the ingredients table:
 
-    > vibase --module cjar ingredients
+    > vibase cjar.py ingredients
     
 If you don't wish to store your totally unguessable password in the python file, use the getpass module:
 
@@ -46,6 +54,8 @@ If you don't wish to store your totally unguessable password in the python file,
                    database="cookiejar", \
                    user="me", \
                    password=getpass())
+
+Tested on PostgreSQL and SQLite.
 
 # Author
 
