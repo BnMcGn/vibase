@@ -13,7 +13,7 @@ setup(name='vibase',
       author_email='bnmcgn@gmail.com',
       url='https://github.com/BnMcGn/vibase',
       download_url='https://github.com/BnMcGn/vibase/archive/0.1.1.tar.gzip',
-      long_description='Inspired by vidir, vibase allows you to quickly edit the data in a database table using the power of the legendary VIM editor.'
+      long_description='Inspired by vidir, vibase allows you to quickly edit the data in a database table using the power of the legendary VIM editor.',
       packages=['src'],
       entry_points = {
               'console_scripts': [
