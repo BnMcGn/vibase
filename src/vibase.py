@@ -18,7 +18,7 @@ def is_file_sqlite(fname):
         return line.startswith(idstring)
 
 def extract_conn_from_module(module):
-    for x in module.__dict__.values()
+    for x in module.__dict__.values():
         if hasattr(x, "cursor"):
             return x
     raise (RuntimeError, "Couldn't find connection")
